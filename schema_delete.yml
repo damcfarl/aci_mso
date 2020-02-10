@@ -1,0 +1,55 @@
+---
+
+# Three Tier Application Playbook
+- name: Configuring a new Three Tier Application on Multisite
+  hosts: mso1
+  connection: local
+  gather_facts: no
+
+  vars:
+    host: 198.18.135.70
+    tenant: RedHat_Ansible
+    schema: RedHat Demo
+    template: RedHat Template 1
+    template2: RedHat Template 2
+    vrf: vrf1
+    bd: bd1
+    ap: ap1
+    epg1: db
+    epg2: web
+    epg3: app
+    contract1: web2app
+    contract2: app2db
+    filter1: filter1
+    filter2: filter2
+
+  tasks:
+  - name: Add a new tenant
+    delegate_to: localhost
+    mso_tenant:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     tenant: "{{ tenant }}"
+     display_name: RedHat Ansible
+     description: Tenant configured by Ansible
+     users: "{{ user }}"
+     sites:
+       - "Miami"
+       - "San Francisco"
+     state: present
+     validate_certs: no
+
+  - name: Add a new template to a schema
+    mso_schema_template:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     tenant: "{{ tenant }}"
+     schema: "{{ schema }}"
+     template: "{{ template }}"
+     state: absent
+     validate_certs: no
+    delegate_to: localhost
+
+

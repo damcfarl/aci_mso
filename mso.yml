@@ -1,0 +1,851 @@
+---
+  
+# Three Tier Application Playbook
+- name: Configuring a new Three Tier Application on Multisite
+  hosts: mso1
+  connection: local
+  gather_facts: no
+
+  vars:
+    host: 198.18.135.70
+    tenant: RedHat_Ansible
+    schema: RedHat Demo
+    template: RedHat Template 1
+    template2: RedHat Template 2
+    vrf: vrf1
+    bd: bd1
+    ap: ap1
+    epg1: db
+    epg2: web
+    epg3: app
+    contract1: web2app
+    contract2: app2db
+    filter1: filter1
+    filter2: filter2
+
+  tasks:
+  - name: Add a new tenant
+    delegate_to: localhost
+    mso_tenant:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     tenant: "{{ tenant }}"
+     display_name: RedHat Ansible
+     description: Tenant configured by Ansible
+     users: "{{ user }}"
+     sites:
+       - "Miami"
+       - "San Francisco"
+     state: present
+     validate_certs: no
+
+  - name: Add a new template to a schema
+    mso_schema_template:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     tenant: "{{ tenant }}"
+     schema: "{{ schema }}"
+     template: "{{ template }}"
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+#  - name: Remove a template from a schema
+#    mso_schema_template:
+#     host: "{{ host }}"
+#     username: "{{ user }}"
+#     password: "{{ pass }}"
+#     tenant: "{{ tenant }}"
+#     schema: "{{ schema }}"
+#     template: "{{ template }}"
+#     state: absent
+#     validate_certs: no
+#    delegate_to: localhost
+
+  - name: Add a new ANP
+    mso_schema_template_anp:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     schema: "{{ schema }}"
+     template: "{{ template }}"
+     anp: "{{ ap }}"
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Add a new VRF
+    mso_schema_template_vrf:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     schema: "{{ schema }}"
+     template: "{{ template }}"
+     vrf: "{{ vrf }}"
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Add a new BD
+    mso_schema_template_bd:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     schema: "{{ schema }}"
+     template: "{{ template }}"
+     bd: "{{ bd }}"
+     vrf: 
+      name: vrf1
+     state: present
+     validate_certs: no
+     layer2_stretch: True
+    delegate_to: localhost
+
+  - name: Add a new subnet to a BD
+    mso_schema_template_bd_subnet:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     schema: "{{ schema }}"
+     template: "{{ template }}"
+     bd: "{{ bd }}"
+     ip: 10.0.0.1/24
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Add a new EPG
+    mso_schema_template_anp_epg:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     schema: "{{ schema }}"
+     template: "{{ template }}"
+     anp: "{{ ap }}"
+     epg: "{{ epg1 }}"
+     bd:
+      name: bd1
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Add a new EPG
+    mso_schema_template_anp_epg:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     schema: "{{ schema }}"
+     template: "{{ template }}"
+     anp: "{{ ap }}"
+     epg: "{{ epg2 }}"
+     bd:
+      name: bd1
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Add a new EPG
+    mso_schema_template_anp_epg:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     schema: "{{ schema }}"
+     template: "{{ template }}"
+     anp: "{{ ap }}"
+     epg: "{{ epg3 }}"
+     bd:
+      name: bd1
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Add a new filter entry
+    mso_schema_template_filter_entry:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     schema: "{{ schema }}"
+     template: "{{ template }}"
+     filter: "{{ filter1 }}"
+     entry: filter1
+     ethertype: ip
+     ip_protocol: tcp 
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+#  - name: Delete a filter entry
+#    mso_schema_template_filter_entry:
+#     host: "{{ host }}"
+#     username: "{{ user }}"
+#     password: "{{ pass }}"
+#     schema: "{{ schema }}"
+#     template: "{{ template }}"
+#     filter: "{{ filter2 }}"
+#     entry: filter2
+#     ethertype: ip
+#     ip_protocol: tcp
+#     state: absent
+#     validate_certs: no
+#    delegate_to: localhost
+
+#  - name: Delete a contract to an EPG
+#    mso_schema_template_anp_epg_contract:
+#     host: "{{ host }}"
+#     username: "{{ user }}"
+#     password: "{{ pass }}"
+#     schema: "{{ schema }}"
+#     template: "{{ template }}"
+#     anp: "{{ ap }}"
+#     epg: "{{ epg1 }}"
+#     contract:
+#       name: contract 1
+#       type: consumer
+#     state: absent
+#     validate_certs: no
+#    delegate_to: localhost
+
+  - name: Add a new contract filter
+    mso_schema_template_contract_filter:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     schema: "{{ schema }}"
+     template: "{{ template }}"
+     contract: web2app
+     contract_filter_type: both-way
+   #  contract_scope: vrf
+     filter: "{{ filter1 }}"
+     filter_type: consumer-to-provider
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Add a new contract filter
+    mso_schema_template_contract_filter:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     schema: "{{ schema }}"
+     template: "{{ template }}"
+     contract: web2app
+     contract_filter_type: both-way
+   #  contract_scope: vrf
+     filter: "{{ filter1 }}"
+     filter_type: provider-to-consumer
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Add a contract to an EPG
+    mso_schema_template_anp_epg_contract:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     schema: "{{ schema }}"
+     template: "{{ template }}"
+     anp: "{{ ap }}"     
+     epg: "{{ epg2 }}"
+     contract:
+       name: web2app
+       type: consumer
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Add a contract to an EPG
+    mso_schema_template_anp_epg_contract:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     schema: "{{ schema }}"
+     template: "{{ template }}"
+     anp: "{{ ap }}"
+     epg: "{{ epg3 }}"
+     contract:
+       name: web2app
+       type: provider
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Add a new contract filter
+    mso_schema_template_contract_filter:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     schema: "{{ schema }}"
+     template: "{{ template }}"
+     contract: db2app
+     contract_filter_type: both-way
+   #  contract_scope: vrf
+     filter: "{{ filter1 }}"
+     filter_type: provider-to-consumer
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Add a new contract filter
+    mso_schema_template_contract_filter:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     schema: "{{ schema }}"
+     template: "{{ template }}"
+     contract: db2app
+     contract_filter_type: both-way
+   #  contract_scope: vrf
+     filter: "{{ filter1 }}"
+     filter_type: consumer-to-provider
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Add a contract to an EPG
+    mso_schema_template_anp_epg_contract:
+     host: "{{ host }}" 
+     username: "{{ user }}"
+     password: "{{ pass }}" 
+     schema: "{{ schema }}"
+     template: "{{ template }}"
+     anp: "{{ ap }}"
+     epg: "{{ epg1 }}"
+     contract:
+       name: db2app
+       type: provider
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Add a contract to an EPG
+    mso_schema_template_anp_epg_contract:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     schema: "{{ schema }}"
+     template: "{{ template }}"
+     anp: "{{ ap }}"
+     epg: "{{ epg3 }}"
+     contract:
+       name: db2app
+       type: consumer
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Add a new site to a schema
+    mso_schema_site:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     schema: "{{ schema }}"
+     site: Miami
+     template: "{{ template }}"
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Deploy a schema template
+    mso_schema_template_deploy:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     schema: "{{ schema }}"
+     template: "{{ template }}"
+     state: deploy
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Add a new template to a schema
+    mso_schema_template:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     tenant: "{{ tenant }}"
+     schema: "{{ schema }}"
+     template: "{{ template2 }}"
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+#  - name: Remove a template from a schema
+#    mso_schema_template:
+#     host: "{{ host }}"
+#     username: "{{ user }}"
+#     password: "{{ pass }}"
+#     tenant: "{{ tenant }}"
+#     schema: "{{ schema }}"
+#     template: "{{ template }}"
+#     state: absent
+#     validate_certs: no
+#    delegate_to: localhost
+
+  - name: Add a new ANP
+    mso_schema_template_anp:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     schema: "{{ schema }}"
+     template: "{{ template2 }}"
+     anp: "{{ ap }}"
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Add a new VRF
+    mso_schema_template_vrf:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     schema: "{{ schema }}"
+     template: "{{ template2 }}"
+     vrf: "{{ vrf }}"
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Add a new BD
+    mso_schema_template_bd:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     schema: "{{ schema }}"
+     template: "{{ template2 }}"
+     bd: "{{ bd }}"
+     vrf: 
+      name: vrf1
+     state: present
+     validate_certs: no
+     layer2_stretch: True
+    delegate_to: localhost
+
+  - name: Add a new subnet to a BD
+    mso_schema_template_bd_subnet:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     schema: "{{ schema }}"
+     template: "{{ template2 }}"
+     bd: "{{ bd }}"
+     ip: 10.0.0.1/24
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Add a new EPG
+    mso_schema_template_anp_epg:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     schema: "{{ schema }}"
+     template: "{{ template2 }}"
+     anp: "{{ ap }}"
+     epg: "{{ epg1 }}"
+     bd:
+      name: bd1
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Add a new EPG
+    mso_schema_template_anp_epg:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     schema: "{{ schema }}"
+     template: "{{ template2 }}"
+     anp: "{{ ap }}"
+     epg: "{{ epg2 }}"
+     bd:
+      name: bd1
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Add a new EPG
+    mso_schema_template_anp_epg:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     schema: "{{ schema }}"
+     template: "{{ template2 }}"
+     anp: "{{ ap }}"
+     epg: "{{ epg3 }}"
+     bd:
+      name: bd1
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Add a new filter entry
+    mso_schema_template_filter_entry:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     schema: "{{ schema }}"
+     template: "{{ template2 }}"
+     filter: "{{ filter1 }}"
+     entry: filter1
+     ethertype: ip
+     ip_protocol: tcp 
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+#  - name: Delete a filter entry
+#    mso_schema_template_filter_entry:
+#     host: "{{ host }}"
+#     username: "{{ user }}"
+#     password: "{{ pass }}"
+#     schema: "{{ schema }}"
+#     template: "{{ template }}"
+#     filter: "{{ filter2 }}"
+#     entry: filter2
+#     ethertype: ip
+#     ip_protocol: tcp
+#     state: absent
+#     validate_certs: no
+#    delegate_to: localhost
+
+#  - name: Delete a contract to an EPG
+#    mso_schema_template_anp_epg_contract:
+#     host: "{{ host }}"
+#     username: "{{ user }}"
+#     password: "{{ pass }}"
+#     schema: "{{ schema }}"
+#     template: "{{ template }}"
+#     anp: "{{ ap }}"
+#     epg: "{{ epg1 }}"
+#     contract:
+#       name: contract 1
+#       type: consumer
+#     state: absent
+#     validate_certs: no
+#    delegate_to: localhost
+
+  - name: Add a new contract filter
+    mso_schema_template_contract_filter:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     schema: "{{ schema }}"
+     template: "{{ template2 }}"
+     contract: web2app
+     contract_filter_type: both-way
+   #  contract_scope: vrf
+     filter: "{{ filter1 }}"
+     filter_type: consumer-to-provider
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Add a new contract filter
+    mso_schema_template_contract_filter:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     schema: "{{ schema }}"
+     template: "{{ template2 }}"
+     contract: web2app
+     contract_filter_type: both-way
+   #  contract_scope: vrf
+     filter: "{{ filter1 }}"
+     filter_type: provider-to-consumer
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Add a contract to an EPG
+    mso_schema_template_anp_epg_contract:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     schema: "{{ schema }}"
+     template: "{{ template2 }}"
+     anp: "{{ ap }}"     
+     epg: "{{ epg2 }}"
+     contract:
+       name: web2app
+       type: consumer
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Add a contract to an EPG
+    mso_schema_template_anp_epg_contract:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     schema: "{{ schema }}"
+     template: "{{ template2 }}"
+     anp: "{{ ap }}"
+     epg: "{{ epg3 }}"
+     contract:
+       name: web2app
+       type: provider
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Add a new contract filter
+    mso_schema_template_contract_filter:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     schema: "{{ schema }}"
+     template: "{{ template2 }}"
+     contract: db2app
+     contract_filter_type: both-way
+   #  contract_scope: vrf
+     filter: "{{ filter1 }}"
+     filter_type: provider-to-consumer
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Add a new contract filter
+    mso_schema_template_contract_filter:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     schema: "{{ schema }}"
+     template: "{{ template2 }}"
+     contract: db2app
+     contract_filter_type: both-way
+   #  contract_scope: vrf
+     filter: "{{ filter1 }}"
+     filter_type: consumer-to-provider
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Add a contract to an EPG
+    mso_schema_template_anp_epg_contract:
+     host: "{{ host }}" 
+     username: "{{ user }}"
+     password: "{{ pass }}" 
+     schema: "{{ schema }}"
+     template: "{{ template2 }}"
+     anp: "{{ ap }}"
+     epg: "{{ epg1 }}"
+     contract:
+       name: db2app
+       type: provider
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Add a contract to an EPG
+    mso_schema_template_anp_epg_contract:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     schema: "{{ schema }}"
+     template: "{{ template2 }}"
+     anp: "{{ ap }}"
+     epg: "{{ epg3 }}"
+     contract:
+       name: db2app
+       type: consumer
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Add a new site to a schema
+    mso_schema_site:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     schema: "{{ schema }}"
+     site: San Francisco
+     template: "{{ template2 }}"
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Deploy a schema template
+    mso_schema_template_deploy:
+     host: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     schema: "{{ schema }}"
+     template: "{{ template2 }}"
+     state: deploy
+     validate_certs: no
+    delegate_to: localhost
+
+- name: Configuring VMs to a three-tier application
+  hosts: apic1
+  connection: local
+  gather_facts: no
+
+  vars:
+    tenant: RedHat_Ansible
+    ap: ap1
+    epg1: db
+    epg2: web
+    epg3: app
+    domain: S2-VMM
+
+  tasks:
+  - name: Add a new VMM domain
+    aci_domain:
+     host: "{{ host2 }}" 
+     username: "{{ user2 }}"
+     password: "{{ pass2 }}"
+     domain: "{{ domain }}"
+     domain_type: vmm
+     vm_provider: vmware
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Adding EPG to VMM domain
+    aci_epg_to_domain:
+     host: "{{ host2 }}"
+     username: "{{ user2 }}"
+     password: "{{ pass2 }}"
+     tenant: "{{ tenant }}"
+     ap: "{{ ap }}"
+     epg: "{{ epg1 }}"
+     domain: "{{ domain }}"
+     domain_type: vmm
+     vm_provider: vmware
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Adding EPG to VMM domain
+    aci_epg_to_domain:
+     host: "{{ host2 }}"
+     username: "{{ user2 }}"
+     password: "{{ pass2 }}"
+     tenant: "{{ tenant }}"
+     ap: "{{ ap }}"
+     epg: "{{ epg2 }}"
+     domain: "{{ domain }}"
+     domain_type: vmm
+     vm_provider: vmware
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Adding EPG to VMM domain
+    aci_epg_to_domain:
+     host: "{{ host2 }}"
+     username: "{{ user2 }}"
+     password: "{{ pass2 }}"
+     tenant: "{{ tenant }}"
+     ap: "{{ ap }}"
+     epg: "{{ epg3 }}"
+     domain: "{{ domain }}"
+     domain_type: vmm
+     vm_provider: vmware
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+- name: Configuring VMs to a three-tier application
+  hosts: apic2
+  connection: local
+  gather_facts: no
+
+  vars:
+    tenant: RedHat_Ansible
+    ap: ap1
+    epg1: db
+    epg2: web
+    epg3: app
+    domain: S1-VMM
+
+  tasks:
+  - name: Add a new VMM domain
+    aci_domain:
+     host: "{{ host3 }}" 
+     username: "{{ user3 }}"
+     password: "{{ pass3 }}"
+     domain: "{{ domain }}"
+     domain_type: vmm
+     vm_provider: vmware
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Adding EPG to VMM domain
+    aci_epg_to_domain:
+     host: "{{ host3 }}"
+     username: "{{ user3 }}"
+     password: "{{ pass3 }}"
+     tenant: "{{ tenant }}"
+     ap: "{{ ap }}"
+     epg: "{{ epg1 }}"
+     domain: "{{ domain }}"
+     domain_type: vmm
+     vm_provider: vmware
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Adding EPG to VMM domain
+    aci_epg_to_domain:
+     host: "{{ host3 }}"
+     username: "{{ user3 }}"
+     password: "{{ pass3 }}"
+     tenant: "{{ tenant }}"
+     ap: "{{ ap }}"
+     epg: "{{ epg2 }}"
+     domain: "{{ domain }}"
+     domain_type: vmm
+     vm_provider: vmware
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+  - name: Adding EPG to VMM domain
+    aci_epg_to_domain:
+     host: "{{ host3 }}"
+     username: "{{ user3 }}"
+     password: "{{ pass3 }}"
+     tenant: "{{ tenant }}"
+     ap: "{{ ap }}"
+     epg: "{{ epg3 }}"
+     domain: "{{ domain }}"
+     domain_type: vmm
+     vm_provider: vmware
+     state: present
+     validate_certs: no
+    delegate_to: localhost
+
+
+
+- name: Update VM's to portgroup
+  hosts: vc1
+  connection: local
+  gather_facts: no
+
+  vars:
+    switch: S2-VMM
+    vms:
+    - name: RedHat_Demo-app
+      portgroup: RedHat_Ansible|ap1|app
+    - name: RedHat_Demo-db
+      portgroup: RedHat_Ansible|ap1|db
+    - name: RedHat_Demo-web
+      portgroup: RedHat_Ansible|ap1|web
+
+  tasks:
+  - name: Update VMs
+    vmware_guest:
+     hostname: "{{ host }}"
+     username: "{{ user }}"
+     password: "{{ pass }}"
+     datacenter: S2-DC
+     validate_certs: no
+     name: "{{ item.name }}"
+     networks:
+     - name: "{{ item.portgroup }}"
+    delegate_to: localhost
+    loop: "{{ vms }}"
+
